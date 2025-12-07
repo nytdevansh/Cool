@@ -1,11 +1,13 @@
 #include "WallpaperEngine.hpp"
 #include <iostream>
 
-// Forward declare Obj-C++ bridge functions
-extern void* createWallpaperWindow();
-extern void destroyWallpaperWindow(void* window);
-extern void playVideo(void* window, const char* path);
-extern void setVideoMuted(void* window, bool muted);
+// Forward declare Obj-C++ bridge functions WITH extern "C"
+extern "C" {
+    void* createWallpaperWindow();
+    void destroyWallpaperWindow(void* window);
+    void playVideo(void* window, const char* path);
+    void setVideoMuted(void* window, bool muted);
+}
 
 class WallpaperEngine::Impl {
 public:

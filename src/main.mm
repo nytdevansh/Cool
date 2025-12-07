@@ -24,7 +24,7 @@
 
 - (void)setupMenuBar {
     NSStatusBar* statusBar = [NSStatusBar systemStatusBar];
-    NSStatusItem* item = [statusBar statusItemWithLength:NSStatusItemLengthVariable];
+    NSStatusItem* item = [statusBar statusItemWithLength:NSVariableStatusItemLength];
     [item.button setTitle:@"🎬"];
     
     NSMenu* menu = [[NSMenu alloc] init];
