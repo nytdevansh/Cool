@@ -5,9 +5,25 @@
 @property (strong) AVPlayer* player;
 @property (strong) AVPlayerLayer* playerLayer;
 @property (strong) AVPlayerLooper* looper;
+- (void)cleanupPlayer;
 @end
 
 @implementation WallpaperWindow
+
+- (void)cleanupPlayer {
+    if (self.player) {
+        [self.player pause];
+        self.player = nil;
+    }
+    if (self.playerLayer) {
+        [self.playerLayer removeFromSuperlayer];
+        self.playerLayer = nil;
+    }
+    if (self.looper) {
+        self.looper = nil;
+    }
+}
+
 @end
 
 // C++ bridge functions
@@ -55,6 +71,10 @@ void playVideo(void* windowPtr, const char* path) {
     if (!windowPtr || !path) return;
     
     WallpaperWindow* window = (__bridge WallpaperWindow*)windowPtr;
+    
+    // Clean up any existing player before creating new one
+    [window cleanupPlayer];
+    
     NSURL* videoURL = [NSURL fileURLWithPath:@(path)];
     
     AVPlayerItem* item = [AVPlayerItem playerItemWithURL:videoURL];
@@ -73,6 +93,31 @@ void playVideo(void* windowPtr, const char* path) {
     
     window.player = player;
     [player play];
+}
+
+void pauseVideo(void* windowPtr) {
+    if (!windowPtr) return;
+    
+    WallpaperWindow* window = (__bridge WallpaperWindow*)windowPtr;
+    if (window.player) {
+        [window.player pause];
+    }
+}
+
+void resumeVideo(void* windowPtr) {
+    if (!windowPtr) return;
+    
+    WallpaperWindow* window = (__bridge WallpaperWindow*)windowPtr;
+    if (window.player) {
+        [window.player play];
+    }
+}
+
+void stopVideo(void* windowPtr) {
+    if (!windowPtr) return;
+    
+    WallpaperWindow* window = (__bridge WallpaperWindow*)windowPtr;
+    [window cleanupPlayer];
 }
 
 void setVideoMuted(void* windowPtr, bool muted) {

@@ -6,6 +6,9 @@ extern "C" {
     void* createWallpaperWindow();
     void destroyWallpaperWindow(void* window);
     void playVideo(void* window, const char* path);
+    void pauseVideo(void* window);
+    void resumeVideo(void* window);
+    void stopVideo(void* window);
     void setVideoMuted(void* window, bool muted);
 }
 
@@ -41,6 +44,30 @@ void WallpaperEngine::setVideoPath(const std::string& path) {
     impl->currentVideoPath = path;
     if (impl->windowHandle) {
         playVideo(impl->windowHandle, path.c_str());
+    }
+}
+
+void WallpaperEngine::play() {
+    if (impl->windowHandle && !impl->currentVideoPath.empty()) {
+        playVideo(impl->windowHandle, impl->currentVideoPath.c_str());
+    }
+}
+
+void WallpaperEngine::pause() {
+    if (impl->windowHandle) {
+        pauseVideo(impl->windowHandle);
+    }
+}
+
+void WallpaperEngine::resume() {
+    if (impl->windowHandle) {
+        resumeVideo(impl->windowHandle);
+    }
+}
+
+void WallpaperEngine::stopVideo() {
+    if (impl->windowHandle) {
+        ::stopVideo(impl->windowHandle);
     }
 }
 

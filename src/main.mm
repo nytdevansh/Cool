@@ -1,6 +1,5 @@
 #import <Cocoa/Cocoa.h>
 #include "WallpaperEngine.hpp"
-#include <thread>
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 @property WallpaperEngine* engine;
@@ -9,31 +8,9 @@
 @implementation AppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification*)notification {
+    // Initialize C++ engine (wallpaper window created via C++ bridge)
     self.engine = new WallpaperEngine();
     self.engine->start();
-    
-    // Get bundled video path
-    NSString* videoPath = [[NSBundle mainBundle] pathForResource:@"sample" ofType:@"mp4"];
-    if (videoPath) {
-        self.engine->setVideoPath([videoPath UTF8String]);
-    }
-    
-    // Create menu bar icon
-    [self setupMenuBar];
-}
-
-- (void)setupMenuBar {
-    NSStatusBar* statusBar = [NSStatusBar systemStatusBar];
-    NSStatusItem* item = [statusBar statusItemWithLength:NSVariableStatusItemLength];
-    [item.button setTitle:@"🎬"];
-    
-    NSMenu* menu = [[NSMenu alloc] init];
-    [menu addItemWithTitle:@"Quit Cool" action:@selector(quit:) keyEquivalent:@"q"];
-    [item setMenu:menu];
-}
-
-- (void)quit:(id)sender {
-    [NSApp terminate:nil];
 }
 
 - (void)applicationWillTerminate:(NSNotification*)notification {
