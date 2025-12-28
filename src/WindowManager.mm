@@ -85,10 +85,12 @@ void playVideo(void* windowPtr, const char* path) {
     
     // Create layer
     window.playerLayer = [AVPlayerLayer playerLayerWithPlayer:player];
-    [window.playerLayer setFrame:[[window contentView] bounds]];
-    [window.playerLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
-    
     NSView* view = [window contentView];
+    NSRect bounds = [view bounds];
+    [window.playerLayer setFrame:bounds];
+    [window.playerLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
+    [window.playerLayer setAutoresizingMask:kCALayerWidthSizable | kCALayerHeightSizable];
+    
     [[view layer] addSublayer:window.playerLayer];
     
     window.player = player;
