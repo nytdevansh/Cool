@@ -1,8 +1,8 @@
 # 🎬 Cool — Video Wallpaper for macOS
 
-A lightweight, C++-powered video wallpaper engine for macOS that plays videos behind your desktop icons.
+A modern video wallpaper engine for macOS that plays videos behind your desktop icons.
 
-Built with pure C++, Objective-C++ bridges, and zero Swift drama.
+Built with C++, Swift, Objective-C++ bridges, and CMake.
 
 ---
 
@@ -21,17 +21,24 @@ Built with pure C++, Objective-C++ bridges, and zero Swift drama.
 
 ```
 Cool/
-├── CMakeLists.txt          # Build configuration
+├── CMakeLists.txt                 # Build configuration
 ├── src/
-│   ├── main.mm             # App entry point (Obj-C++)
-│   ├── WallpaperEngine.hpp # C++ engine header
-│   ├── WallpaperEngine.cpp # C++ engine implementation
-│   └── WindowManager.mm    # Obj-C++ bridge to Cocoa/AVFoundation
-├── resources/
-│   └── sample.mp4          # Test video (add your own)
-├── Info.plist              # App bundle metadata
-├── Cool.entitlements       # Security entitlements
-└── README.md               # You are here
+│   ├── WallpaperEngine.hpp        # C++ engine header
+│   ├── WallpaperEngine.cpp        # C++ engine implementation
+│   ├── WindowManager.mm           # Obj-C++ Cocoa/AVFoundation bridge
+│   ├── main.mm                    # App entry point (Obj-C++)
+│   ├── CoolApp.swift              # SwiftUI app entry point
+│   ├── ContentView.swift          # Main UI (SwiftUI)
+│   ├── CppBridge.swift            # C++ to Swift bridge
+│   └── VideoManager.swift         # Video management logic
+├── Cool_web/                      # Web resources (optional)
+│   ├── index.html
+│   ├── script.js
+│   └── style.css
+├── build/                         # Build artifacts
+├── Info.plist                     # App bundle metadata
+├── Cool.entitlements              # Security entitlements
+└── README.md                      # You are here
 ```
 
 ---
@@ -57,61 +64,64 @@ xcode-select --install
 brew install cmake
 ```
 
-### 2. Add Your Video
-
-Place a video file named `sample.mp4` in the `resources/` folder.
-
-### 3. Build
+### 2. Build
 
 ```bash
-# Create build directory
-mkdir build && cd build
+# Using provided build script (recommended)
+./build.sh
 
-# Configure
+# Or manually:
+mkdir -p build && cd build
 cmake ..
-
-# Build
 make
+```
 
-# Run
+### 3. Run
+
+```bash
+# Open the compiled app
 open Cool.app
+
+# Or from build directory
+open build/Release/Cool.app
 ```
 
 ---
 
 ## 🎮 Usage
 
-### Running the App
+### Running th and launching:
+1. The app appears in the menu bar
+2. Select a video file via the UI
+3. Video plays behind your desktop icons on repeat
+4. Video loops infinitely without gaps
 
-After building, the app will:
-1. Launch in the menu bar (look for 🎬 icon)
-2. Automatically play the bundled video behind your desktop icons
-3. Video loops infinitely
+### Controls
 
-### Menu Bar Controls
-
+- Select video from file picker
+- Pause/Resume playback
+- Mute toggle
+- Adjust scaling mode (Fill/Fit/Stretch)
+- Quit from menu bar
 Click the 🎬 icon in the menu bar:
 - **Quit Cool** — Stop the app
 
----
+---Modify Video Selection UI
 
-## 🛠️ Customization
-
-### Change Video
-
-Edit `src/main.mm` line 13:
-
-```objc
-NSString* videoPath = [[NSBundle mainBundle] pathForResource:@"sample" ofType:@"mp4"];
-```
-
-Change `@"sample"` to your video filename (without extension).
+Edit `src/ContentView.swift` to customize the video picker interface and add new controls.
 
 ### Add Scaling Modes
 
-Currently supports `AVLayerVideoGravityResizeAspectFill` (fill screen).
+Current modes are defined in `src/VideoManager.swift`.
 
-To add more modes, implement `WallpaperEngine::setScaleMode()` in `WallpaperEngine.cpp`.
+To add more scaling options:
+1. Add enum case in `VideoManager`
+2. Implement corresponding `AVLayerVideoGravity` in `WindowManager.mm`
+3. Update SwiftUI controls in `ContentView.swift`
+
+### Multi-Monitor Support
+
+Modify `createWallpaperWindow()` in `src/WindowManager.mm` to loop through `[NSScreen screens]` and create wallpaper layers for each display
 
 ### Multi-Monitor Support
 
@@ -124,18 +134,36 @@ To add multiple displays, modify `createWallpaperWindow()` in `WindowManager.mm`
 ### C++ Core (`WallpaperEngine`)
 - Pure C++ engine logic
 - Platform-agnostic interface
-- State management
+- Staore Components
 
-### Objective-C++ Bridges
-- `WindowManager.mm` — Cocoa window creation, AVFoundation playback
-- `main.mm` — App lifecycle, menu bar UI
+**WallpaperEngine (C++)**
+- Engine logic and state management
+- Platform-agnostic implementation
+- Handles wallpaper layer management
 
-### Communication
-- C++ calls Objective-C++ functions via `extern "C"` bridges
-- Objective-C++ uses `void*` handles to pass objects back to C++
+**WindowManager (Objective-C++)**
+- Cocoa window creation at desktop level
+- AVFoundation video playback
+- Bridges between C++ core and Cocoa/AVFoundation
 
----
+**Swift UI Layer**
+- `CoolApp.swift` — SwiftUI app entry point
+- `ContentView.swift` — Main UI for controls
+- `VideoManager.swift` — Swift video management
+- `CppBridge.swift` — C++/Swift interoperability
 
+### Communication Flow
+```
+User → ContentView (SwiftUI)
+  ↓
+VideoManager (Swift)
+  ↓
+CppBridge (Obj-C++ bridge)
+  ↓
+WallpaperEngine (C++)
+  ↓
+WindowManager (Obj-C++ → Cocoa/AVFoundation)
+```
 ## ⚙️ Technical Details
 
 ### Desktop Level Window
@@ -149,22 +177,33 @@ This places the window **below** desktop icons but **above** the actual desktop 
 ### Infinite Looping
 
 ```objc
-AVPlayerLooper* looper = [AVPlayerLooper playerLooperWithPlayer:player 
-                                                   templateItem:item];
+AVPlBuild fails with CMake errors
+```bash
+# Clean build from scratch
+rm -rf build/
+mkdir build && cd build
+cmake ..
+make
 ```
 
-AVFoundation's built-in looper prevents gaps between loops.
+### "The application cannot be opened"
+- Ensure build completed successfully: `ls build/Release/Cool.app/Contents/MacOS/Cool`
+- Check code signing: `codesign -v build/Release/Cool.app`
 
-### Ignoring Mouse Events
+### Video not displaying
+- Verify video codec (H.264/HEVC recommended)
+- Check file permissions: `ls -la /path/to/video.mp4`
+- Ensure video format is supported by AVFoundation
 
-```objc
-[window setIgnoresMouseEvents:YES];
-```
+### Swift/Objective-C++ interop issues
+- Verify bridge declarations in `CppBridge.swift`
+- Check `WindowManager.mm` properly exposes C++ interfaces
+- Ensure proper `#include` directives in bridge files
 
-Allows clicking through the video to interact with desktop icons.
-
----
-
+### Performance/CPU high
+- Check window level setting in `WindowManager.mm`
+- Verify video resolution matches display
+- Profile with Instruments.app
 ## 🐛 Common Issues
 
 ### "The application cannot be opened because its executable is missing"
@@ -191,28 +230,31 @@ Allows clicking through the video to interact with desktop icons.
 ### Phase 1 — Foundations ✅
 - [x] Basic window at desktop level
 - [x] Video playback with looping
-- [x] Menu bar UI
-- [x] Bundled video support
+- [x] Bundled app
+- [x] C++/Swift/Objective-C++ architecture
 
-### Phase 2 — Control UI
-- [ ] File picker to choose videos
-- [ ] UserDefaults to remember last video
-- [ ] Pause/Resume controls
+### Phase 2 — Core Features (In Progress)
+- [x] File picker to choose videos
+- [x] Pause/Resume controls
 - [ ] Mute toggle
 - [ ] Scaling mode selector (Fill/Fit/Stretch)
+- [ ] UserDefaults to remember last video
 
 ### Phase 3 — Polish
 - [ ] Multi-monitor support
 - [ ] Auto-start at login
 - [ ] CPU/battery saver mode
 - [ ] Performance profiling
+- [ ] Native app preferences window
 
 ### Phase 4 — Pro Features
 - [ ] Per-display video settings
 - [ ] Playlist support
 - [ ] Video preview thumbnails
 - [ ] Screen detection (pause during games)
-- [ ] HEVC/webM codec support
+- [ ] HEVC/webM/VP9 codec support
+- [ ] Brightness/contrast adjustment
+- [ ] Schedule wallpaper changes
 
 ---
 
@@ -226,9 +268,9 @@ Just don't blame me if your Mac catches fire trying to play 8K 120fps videos as 
 
 ## 🙏 Credits
 
-Built by someone who refused to use Swift and insisted on doing it the hard way with C++.
+Built with a hybrid approach: C++ for performance, Swift for modern UI, and Objective-C++ for the macOS bridge.
 
-Inspired by every unfinished project in `~/Desktop/old_projects/`.
+Inspired by the need for a lightweight, customizable video wallpaper solution on macOS.
 
 ---
 
